@@ -1,0 +1,1979 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <title>Untitled</title>
+    
+
+  </head>
+    
+  <body>
+  <html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Navier–Stokes Equations — Interactive Notes</title>
+  <style>
+    :root{
+      --bg0:#F7F9FF;
+      --bg1:#EFF4FF;
+      --card:rgba(255,255,255,.92);
+      --card2:#FFFFFF;
+      --stroke:#D8E0F6;
+      --stroke2:#C9D4F4;
+      --text:#0B1220;
+      --muted:#2E3F5A;
+      --muted2:#506583;
+      --accent:#1A73E8;
+      --accent2:#7C3AED;
+      --shadow: 0 22px 70px rgba(17,24,39,.12);
+      --shadow2: 0 10px 32px rgba(17,24,39,.10);
+      --r: 18px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      color:var(--text);
+      font-family:var(--sans);
+      background:
+        radial-gradient(1000px 700px at 12% 8%, rgba(26,115,232,.11), transparent 60%),
+        radial-gradient(900px 650px at 88% 6%, rgba(124,58,237,.10), transparent 62%),
+        radial-gradient(900px 650px at 65% 90%, rgba(16,185,129,.08), transparent 60%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow-x:hidden;
+    }
+    body:before{
+      content:"";
+      position:fixed; inset:0;
+      background-image:
+        linear-gradient(rgba(11,18,32,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(11,18,32,.035) 1px, transparent 1px);
+      background-size: 36px 36px;
+      opacity:.25;
+      pointer-events:none;
+      mask-image: radial-gradient(closest-side at 50% 0%, rgba(0,0,0,.9), rgba(0,0,0,0));
+      -webkit-mask-image: radial-gradient(closest-side at 50% 0%, rgba(0,0,0,.9), rgba(0,0,0,0));
+    }
+
+    .wrap{
+      max-width:1120px;
+      margin:0 auto;
+      padding:28px 18px 64px;
+      position:relative;
+    }
+
+    .top{
+      padding:18px 20px 16px;
+      border:1px solid var(--stroke);
+      background:var(--card);
+      border-radius:var(--r);
+      box-shadow:var(--shadow2);
+      backdrop-filter: blur(10px);
+    }
+    .toprow{
+      display:flex; align-items:flex-end; justify-content:space-between; gap:14px; flex-wrap:wrap;
+    }
+    h1{
+      font-size:32px;
+      line-height:1.05;
+      margin:0;
+      letter-spacing:-.02em;
+    }
+    .subtitle{
+      margin-top:8px;
+      color:var(--muted2);
+      font-size:14.5px;
+      line-height:1.5;
+      max-width:78ch;
+    }
+
+    .eqwrap{margin-top:12px; display:grid; gap:10px}
+    .eqline{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid var(--stroke);
+      background:#F8FAFF;
+    }
+    .eqline .sym{
+      font-family:var(--mono);
+      font-size:13px;
+      color:rgba(11,18,32,.88);
+      padding:7px 10px;
+      border-radius:999px;
+      border:1px solid rgba(215,224,246,.95);
+      background:rgba(255,255,255,.85);
+      cursor:pointer;
+      user-select:none;
+      transition: transform .08s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
+    }
+    .eqline .sym:hover{
+      transform: translateY(-1px);
+      border-color: rgba(26,115,232,.40);
+      box-shadow: 0 10px 26px rgba(26,115,232,.10);
+    }
+    .eqline .sym:active{transform: translateY(0)}
+    .eqline .sep{
+      font-family:var(--mono);
+      opacity:.6;
+      padding:0 2px;
+    }
+    .eqhelp{
+      color:var(--muted2);
+      font-size:12.8px;
+      line-height:1.45;
+      padding-left:2px;
+    }
+
+    .eqblock{
+      padding:14px 14px 12px;
+      border:1px solid var(--stroke);
+      background:#F9FBFF;
+      border-radius:14px;
+      overflow:auto;
+    }
+    .eqblock pre{
+      margin:0;
+      font-family:var(--mono);
+      font-size:13px;
+      line-height:1.55;
+      color:#0B1220;
+      white-space:pre;
+    }
+    .nav{
+      margin-top:14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:12px 14px;
+      border-radius:var(--r);
+      border:1px solid var(--stroke);
+      background:var(--card);
+      box-shadow:var(--shadow2);
+      backdrop-filter: blur(10px);
+      flex-wrap:wrap;
+    }
+    .nav-left, .nav-mid, .nav-right{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--stroke);
+      background:#FFFFFF;
+      color:var(--text);
+      cursor:pointer;
+      user-select:none;
+      transition: transform .08s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease;
+      box-shadow:0 2px 0 rgba(17,24,39,.04);
+      font-weight:650;
+      letter-spacing:.01em;
+    }
+    .btn:hover{background:#FAFBFF; border-color:var(--stroke2); box-shadow:0 12px 26px rgba(17,24,39,.08)}
+    .btn:active{transform:translateY(1px); box-shadow:0 8px 16px rgba(17,24,39,.06)}
+    .btn.primary{
+      border-color:rgba(26,115,232,.35);
+      background:linear-gradient(180deg, rgba(26,115,232,.10), rgba(26,115,232,.02));
+    }
+    .select{
+      border-radius:12px;
+      border:1px solid var(--stroke);
+      background:#FFFFFF;
+      padding:10px 12px;
+      font-weight:650;
+      color:rgba(11,18,32,.86);
+      box-shadow:0 2px 0 rgba(17,24,39,.04);
+      cursor:pointer;
+      min-width:240px;
+    }
+    .dots{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+    .stepdot{
+      width:10px;height:10px;border-radius:99px;
+      border:1px solid #C9D3F2;
+      background:rgba(11,18,32,.08);
+      cursor:pointer;
+      transition: transform .08s ease, background .18s ease, border-color .18s ease;
+    }
+    .stepdot:hover{transform:scale(1.12); border-color:rgba(26,115,232,.45)}
+    .stepdot.active{
+      background:rgba(26,115,232,.85);
+      border-color:rgba(26,115,232,.85);
+      box-shadow:0 0 0 4px rgba(26,115,232,.12);
+    }
+    .meta{
+      color:var(--muted2);
+      font-size:13px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .meta strong{color:var(--text); font-weight:800}
+    .divider{width:1px;height:18px;background:var(--stroke)}
+    .deck{position:relative;margin-top:14px}
+    .card{
+      border:1px solid var(--stroke);
+      background:var(--card);
+      border-radius:var(--r);
+      box-shadow:var(--shadow);
+      padding:18px;
+      min-height:640px;
+      display:none;
+      transform: translateY(6px);
+      opacity:0;
+      animation: fadeIn .24s ease forwards;
+      backdrop-filter: blur(10px);
+    }
+    .card.active{display:block}
+    @keyframes fadeIn{to{transform: translateY(0); opacity:1}}
+
+    .cardgrid{
+      display:grid;
+      grid-template-columns: 1fr 452px;
+      gap:16px;
+      align-items:start;
+    }
+    @media (max-width: 980px){
+      .cardgrid{grid-template-columns: 1fr}
+    }
+    .card h2{
+      margin:0 0 10px;
+      font-size:22px;
+      letter-spacing:-.01em;
+    }
+    .card p{
+      margin:0 0 12px;
+      color:rgba(11,18,32,.94);
+      line-height:1.72;
+      font-size:15.7px;
+    }
+    .card .muted{
+      color:var(--muted);
+      font-size:14.7px;
+      line-height:1.68;
+    }
+    .math{
+      font-family:var(--mono);
+      background:#F6F8FF;
+      border:1px solid var(--stroke);
+      padding:10px 12px;
+      border-radius:14px;
+      color:#0B1220;
+      overflow:auto;
+      margin:10px 0 14px;
+      font-size:13px;
+      line-height:1.6;
+    }
+    .chiprow{display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 14px}
+    .chip{
+      font-family:var(--mono);
+      font-size:12.6px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--stroke);
+      background:rgba(255,255,255,.85);
+      color:rgba(11,18,32,.86);
+    }
+
+    .side{
+      border:1px solid var(--stroke);
+      border-radius:var(--r);
+      background:var(--card2);
+      padding:12px;
+      position:sticky;
+      top:14px;
+      box-shadow:0 6px 18px rgba(17,24,39,.06);
+    }
+    .canvas-wrap{
+      position:relative;
+      border-radius:14px;
+      overflow:hidden;
+      border:1px solid var(--stroke);
+      background:#F7FAFF;
+    }
+    canvas{display:block;width:100%;height:auto}
+    .badge{
+      position:absolute;
+      top:10px; left:10px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--stroke);
+      background:rgba(255,255,255,.78);
+      color:rgba(11,18,32,.86);
+      font-size:12.5px;
+      backdrop-filter: blur(6px);
+    }
+    .badge.right{left:auto; right:10px}
+    .controls{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+      margin-top:12px;
+    }
+    .row{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap:10px;
+      align-items:center;
+    }
+    .label{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    .label b{
+      font-size:13px;
+      font-weight:850;
+      color:rgba(11,18,32,.92);
+      letter-spacing:.01em;
+    }
+    .label span{
+      font-size:12.8px;
+      color:var(--muted2);
+      line-height:1.35;
+    }
+    input[type="range"]{
+      width:100%;
+      accent-color: var(--accent);
+    }
+    .val{
+      font-family:var(--mono);
+      font-size:12.5px;
+      color:rgba(11,18,32,.82);
+      padding:6px 8px;
+      border-radius:10px;
+      border:1px solid var(--stroke);
+      background:#FFFFFF;
+      min-width:88px;
+      text-align:right;
+    }
+    .tog{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      padding:10px 10px;
+      border-radius:14px;
+      border:1px solid var(--stroke);
+      background:#FBFCFF;
+    }
+    .switch{
+      position:relative; width:44px; height:26px;
+      background:rgba(11,18,32,.08);
+      border:1px solid var(--stroke);
+      border-radius:999px;
+      cursor:pointer;
+      transition: background .18s ease, border-color .18s ease;
+      flex:0 0 auto;
+    }
+    .switch:before{
+      content:"";
+      position:absolute; top:3px; left:3px;
+      width:20px; height:20px;
+      background:rgba(11,18,32,.82);
+      border-radius:99px;
+      box-shadow:0 8px 18px rgba(17,24,39,.14);
+      transition: transform .18s ease, background .18s ease;
+    }
+    .switch.on{
+      background:rgba(26,115,232,.18);
+      border-color:rgba(26,115,232,.38);
+    }
+    .switch.on:before{
+      transform: translateX(18px);
+      background:rgba(26,115,232,.95);
+    }
+    .footnote{
+      margin-top:10px;
+      color:rgba(81,100,131,.95);
+      font-size:12.9px;
+      line-height:1.6;
+    }
+
+    a{color:rgba(26,115,232,.95); text-decoration:none}
+    a:hover{text-decoration:underline}
+
+    .refs{
+      margin-top:12px;
+      padding-top:10px;
+      border-top:1px dashed rgba(215,224,246,.95);
+    }
+    .refs p{margin:8px 0; font-size:14.5px; color:rgba(11,18,32,.90)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="toprow">
+        <div>
+          <h1>Undestanding the Navier-Stokes Equations</h1>
+          <div class="subtitle">
+            Click the terms below to jump around.
+          </div>
+        </div>
+      </div>
+
+      <div class="eqwrap" aria-label="Navier–Stokes equation map">
+        <div class="eqline">
+          <span class="sym" data-jump="intro">Navier–Stokes</span>
+          <span class="sep">•</span>
+          <span class="sym" data-jump="accel">∂u/∂t</span>
+          <span class="sym" data-jump="advection">(u·∇)u</span>
+          <span class="sep">=</span>
+          <span class="sym" data-jump="pressure">−∇p</span>
+          <span class="sym" data-jump="viscosity">ν∇²u</span>
+          <span class="sym" data-jump="forcing">f</span>
+          <span class="sep">•</span>
+          <span class="sym" data-jump="incompressible">∇·u = 0</span>
+          <span class="sep">•</span>
+          <span class="sym" data-jump="reynolds">Re</span>
+        </div>
+
+        <div class="eqblock" aria-label="Navier–Stokes equations">
+<pre>Incompressible Navier–Stokes (Newtonian fluid)
+
+ρ ( ∂u/∂t  +  (u · ∇)u )  =  −∇p  +  μ ∇²u  +  f
+∇ · u = 0
+
+u(x,t): velocity field (vector at every point)
+p(x,t): pressure field (scalar at every point)
+ρ     : density (constant here)
+μ     : dynamic viscosity
+ν = μ/ρ: kinematic viscosity (what the simulation uses)
+f     : external body force per unit volume (e.g., gravity)</pre>
+        </div>
+        <div class="eqhelp">
+        </div>
+      </div>
+    </div>
+
+    <div class="nav" role="navigation" aria-label="Card navigation">
+      <div class="nav-left">
+        <button class="btn" id="prevBtn" title="Previous (←)">← Prev</button>
+        <button class="btn" id="nextBtn" title="Next (→)">Next →</button>
+        <div class="divider"></div>
+        <button class="btn primary" id="playBtn" title="Play/Pause (Space)">⏵ <span id="playLabel">Play</span></button>
+        <button class="btn" id="resetBtn" title="Reset">Reset</button>
+        <button class="btn" id="clearBtn" title="Clear dye">Clear</button>
+      </div>
+
+      <div class="nav-mid">
+        <select class="select" id="jumpSelect" aria-label="Jump to a card"></select>
+      </div>
+
+      <div class="nav-right meta" aria-label="Status">
+        <span><strong id="cardTitle">What is Navier-Stokes?</strong></span>
+        <span class="divider"></span>
+        <span id="cardCount">1 / 1</span>
+      </div>
+
+      <div class="dots" id="dots" aria-label="Card dots"></div>
+    </div>
+
+    <div class="deck" id="deck">
+      <section class="card active" data-title="What is Navier–Stokes?" data-key="intro" data-mode="dye">
+        <div class="cardgrid">
+          <div>
+            <h2>What is Navier-Stokes, really?</h2>
+            <p>
+              The Navier-Stokes equations act as the rulebook for how fluids move. Essentially, they are the bookkeeping of how momentum
+              flows through space.
+            </p>
+            <p>
+              If you tell me the velocity at every point in a region (that’s <span style="font-family:var(--mono)">u(x,t)</span>),
+              Navier–Stokes tells me how that velocity changes a moment later. Do that repeatedly and you get a simulation.
+              Do it with good measurements and you can predict real fluid behavior.
+            </p>
+            <p>
+              The key phrase is <b>“mass times acceleration equals force.”</b> Newton's second law is something we all learned in high school. The only twist is that the object being accelerated
+              isn’t a ball...Instead, it’s a whole continuous field of tiny particles, all tugging on each other through pressure
+              and viscosity.
+            </p>
+            <div class="math">
+           <br/>
+              Left side of the equation is how the fluid’s motion changes<br/>
+              Right side of the equation is what is pushing/smoothing/forcing it to change
+            </div>
+            <p class="muted">
+              Dragging on the Canvs allows you to visualize how the fluid moves. The dye is just a tracer (like putting a drop of food coloring in water).
+              The equation itself is mostly about the velocity field and the pressure field.
+            </p>
+          </div>
+          <aside class="side">
+            <div class="canvas-wrap">
+              <canvas id="cIntro" width="840" height="520"></canvas>
+              <div class="badge">mode: dye</div>
+              <div class="badge right">stir to create flow</div>
+            </div>
+            <div class="controls">
+              <div class="footnote">
+                This is a simple 2D demo with simplified boundaries and “stable fluids”-style numerics.
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+      <section class="card" data-title="Glossary of the symbols" data-key="glossary" data-mode="dye">
+        <div class="cardgrid">
+          <div>
+            <h2>Glossary</h2>
+            <div class="chiprow">
+              <span class="chip">u(x,t)</span><span class="chip">p(x,t)</span><span class="chip">ρ</span><span class="chip">μ</span><span class="chip">ν</span><span class="chip">f</span><span class="chip">∇</span><span class="chip">∇·</span><span class="chip">∇²</span>
+            </div>
+            <p>
+              <b>Velocity u(x,t)</b> is how fast and which direction the fluid is moving at every point.
+              It’s a vector. In 2D it’s two numbers: horizontal speed and vertical speed.
+            </p>
+            <p>
+              <b>Pressure p(x,t)</b> is pushiness. For incompressible flow,
+              pressure’s job is mostly to keep the velocity field from accidentally compressing or expanding. Meaning, it doesn't randomly gain or lose mass.
+            </p>
+            <p>
+              <b>Density ρ</b> is how much stuff is in a given volume. In the incompressible version here, we treat ρ as constant that changes based on what fluid you are working with.
+            </p>
+            <p>
+              <b>Viscosity μ</b> is internal friction. High viscosity means neighboring bits of fluid really hate moving at wildly
+              different speeds. That dislike shows up as smoothing. Some high viscosity fluids you are familiar with are honey and ketchup!
+            </p>
+            <p>
+              <b>Kinematic viscosity ν = μ/ρ</b> is the version of viscosity most simulations use. It’s basically how quickly momentum smears out,
+              independent of how dense the fluid is.
+            </p>
+            <p>
+              <b>∇ (nabla)</b> is the spatial change operator. You can think of it as “take derivatives in space” instead of time.
+              <span style="font-family:var(--mono)">∇p</span> points in the direction pressure increases fastest.
+            </p>
+            <p>
+              <b>∇·u (divergence)</b> asks are we creating or destroying volume?
+              If it’s zero, the flow is incompressible, meaning whatever enters a tiny region must leave it.
+            </p>
+            <p class="muted">
+              If you remember nothing else: <span style="font-family:var(--mono)">u</span> is motion, <span style="font-family:var(--mono)">p</span> is constraint/push,
+              and <span style="font-family:var(--mono)">ν</span> is smoothing.
+            </p>
+          </div>
+          <aside class="side">
+            <div class="canvas-wrap">
+              <canvas id="cGloss" width="840" height="520"></canvas>
+              <div class="badge">mode: dye + arrows</div>
+              <div class="badge right">u as arrows</div>
+            </div>
+            <div class="controls">
+              <div class="row">
+                <div class="label">
+                  <b>View</b>
+                </div>
+                <select id="viewSelect" class="val" style="text-align:left; min-width:210px">
+                  <option value="dye">Dye + speed shading</option>
+                  <option value="vel">Speed magnitude</option>
+                  <option value="pressure">Pressure p</option>
+                  <option value="divBefore">Divergence (before projection)</option>
+                  <option value="divAfter">Divergence (after projection)</option>
+                </select>
+              </div>
+
+              <div class="row">
+                <div class="label">
+                  <b>Kinematic viscosity ν</b>
+                  <span>Higher ν smooths faster.</span>
+                </div>
+                <div class="val" id="viscVal">0.0008</div>
+              </div>
+              <input id="visc" type="range" min="0" max="1" step="0.001" value="0.34" />
+
+              <div class="row">
+                <div class="label">
+                  <b>Time step Δt</b>
+                  <span>How big each simulation hop is.</span>
+                </div>
+                <div class="val" id="dtVal">0.12</div>
+              </div>
+              <input id="dt" type="range" min="0.02" max="0.8" step="0.01" value="0.12" />
+
+              <div class="tog">
+                <div class="label">
+                  <b>Obstacle</b>
+                  <span>Add a boundary constraint.</span>
+                </div>
+                <div class="switch" id="obsSwitch" role="switch" aria-checked="false"></div>
+              </div>
+
+              <div class="footnote">
+                Small note: in real life, pressure is in Pascals and velocity is in m/s.
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+      <section class="card" data-title="Fields: u(x,t) and p(x,t)" data-key="incompressible" data-mode="dye">
+        <div class="cardgrid">
+          <div>
+            <h2>The equation is about fields (maps)</h2>
+            <p>
+              A lot of math anxiety comes from thinking you need to solve for a number. Here you’re not.
+              You’re updating two maps over time: a velocity map <span style="font-family:var(--mono)">u</span> and a pressure map <span style="font-family:var(--mono)">p</span>.
+            </p>
+            <p>
+              Velocity is a vector at every point. In 2D:
+              <span style="font-family:var(--mono)">u(x,y,t) = (u(x,y,t), v(x,y,t))</span>.
+              That’s why the canvas can show arrows: each arrow is the flow at that spot.
+            </p>
+            <p>
+              Pressure is a scalar. There’s no arrow because pressure itself isn’t a direction.
+              The force term uses <span style="font-family:var(--mono)">−∇p</span> because fluids move from “high push” to “low push.”
+            </p>
+            <p>
+              The constraint <span style="font-family:var(--mono)">∇·u = 0</span> is what “incompressible” means here. It’s saying:
+              if you zoom in on a tiny box, the amount flowing in equals the amount flowing out. The box doesn’t inflate like a balloon or collapse like a vacuum.
+            </p>
+            <div class="math">
+              Operator dictionary (2D):<br/>
+              ∇p = (∂p/∂x, ∂p/∂y)  (pressure pushes along its gradient)<br/>
+              ∇·u = ∂u/∂x + ∂v/∂y  (how much the flow is “expanding” locally)<br/>
+              ∇²u = (∂²u/∂x² + ∂²u/∂y²,  ∂²v/∂x² + ∂²v/∂y²)  (smoothing operator)
+            </div>
+            <p class="muted">
+              The dye is a passenger. It lets you see the flow’s stretching, folding, or mixing.
+            </p>
+          </div>
+          <aside class="side">
+            <div class="canvas-wrap">
+              <canvas id="c0" width="840" height="520"></canvas>
+              <div class="badge" id="modeBadge">mode: dye + speed shading</div>
+              <div class="badge right">u, p, ∇·u</div>
+            </div>
+            <div class="controls">
+              <div class="footnote">
+                Use “Divergence after projection” to see how close the solver gets to incompressibility.
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+      <section class="card" data-title="Acceleration: ∂u/∂t" data-key="accel" data-mode="vel">
+        <div class="cardgrid">
+          <div>
+            <h2>Acceleration is what change in velocity means in a fluid</h2>
+            <p>
+              For a single object, acceleration is just velocity change over time.
+              In a fluid, there are two ways velocity can change.
+            </p>
+            <p>
+              First: the velocity at a fixed location can change as time passes. That’s <span style="font-family:var(--mono)">∂u/∂t</span>.
+              Imagine standing at one point in a river with a speedometer. The flow speeds up when a dam gate opens.
+            </p>
+            <p>
+              Second: even if the whole field is steady in time, a moving parcel can drift into a region with different velocity.
+              That “I moved into new conditions” acceleration is the advection term <span style="font-family:var(--mono)">(u·∇)u</span>.
+            </p>
+            <div class="math">
+              Parcel-following (“material”) acceleration:<br/>
+              D u / D t = ∂u/∂t + (u·∇)u
+            </div>
+            <p class="muted">
+              The canvas shows speed as shading. Areas where speed changes across space are where these terms really have something to do.
+            </p>
+          </div>
+          <aside class="side">
+            <div class="canvas-wrap">
+              <canvas id="c1" width="840" height="520"></canvas>
+              <div class="badge">mode: speed magnitude</div>
+              <div class="badge right">∂u/∂t</div>
+            </div>
+            <div class="controls">
+              <div class="row">
+                <div class="label">
+                  <b>Arrow density</b>
+                  <span>How many vectors to draw.</span>
+                </div>
+                <div class="val" id="arrowVal">10</div>
+              </div>
+              <input id="arrow" type="range" min="6" max="18" step="1" value="10" />
+
+              <div class="tog">
+                <div class="label">
+                  <b>Show arrows</b>
+                  <span>Overlay velocity vectors.</span>
+                </div>
+                <div class="switch on" id="arSwitch1" role="switch" aria-checked="true"></div>
+              </div>
+
+              <div class="footnote">
+                Drag to inject motion. If you “stir” near an obstacle, you’ll see speed gradients pop up fast.
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+      <section class="card" data-title="Advection: (u·∇)u" data-key="advection" data-mode="dye">
+        <div class="cardgrid">
+          <div>
+            <h2>Advection is Motion Carrying Motion</h2>
+            <p>
+              This term is the reason fluids can get dramatic. <span style="font-family:var(--mono)">(u·∇)u</span> is nonlinear,
+              which is just a fancy way of saying if you change the velocity field, you also change how the velocity field moves itself around.
+            </p>
+            <p>
+              In 2D, if <span style="font-family:var(--mono)">u=(u,v)</span>:
+            </p>
+            <div class="math">
+              (u·∇)u = (u ∂/∂x + v ∂/∂y) (u, v)<br/>
+              = (u ∂u/∂x + v ∂u/∂y,  u ∂v/∂x + v ∂v/∂y)
+            </div>
+            <p>
+              The useful way to read it is: “take derivatives in the direction you’re already moving.”
+              So if a particle is moving to the right, it mostly samples the right/left changes. If it’s moving up, it samples up/down changes.
+            </p>
+            <p class="muted">
+              Dye makes advection obvious. You can see it stretching into filaments, folds, and swirls because it’s literally being carried through a non-uniform field.
+            </p>
+          </div>
+          <aside class="side">
+            <div class="canvas-wrap">
+              <canvas id="c2" width="840" height="520"></canvas>
+              <div class="badge">mode: dye</div>
+              <div class="badge right">(u·∇)u</div>
+            </div>
+
+            <div class="controls">
+              <div class="row">
+                <div class="label">
+                  <b>Injection strength</b>
+                  <span>How strong your stirring is.</span>
+                </div>
+                <div class="val" id="injVal2">1.00×</div>
+              </div>
+              <input id="inj2" type="range" min="0.25" max="3.0" step="0.05" value="1.0" />
+
+              <div class="tog">
+                <div class="label">
+                  <b>Velocity arrows</b>
+                  <span>Overlay arrows.</span>
+                </div>
+                <div class="switch on" id="arrowsOnDye" role="switch" aria-checked="true"></div>
+              </div>
+
+              <div class="footnote">
+                The advection method here is semi-Lagrangian (stable and smooth, but a little “too smoothing” compared to reality).
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+      <section class="card" data-title="Pressure: −∇p + projection" data-key="pressure" data-mode="pressure">
+        <div class="cardgrid">
+          <div>
+            <h2>Pressure Keeps ∇·u = 0</h2>
+            <p>
+              If viscosity is internal friction, pressure says "don’t you dare compress this flow."
+              In incompressible simulation, pressure is less like a physical substance and more like the solution to a constraint problem.
+            </p>
+            <p>
+              Here’s the common workflow (called a projection method):
+              you first compute a velocity that obeys the momentum equation terms you can apply directly (advection, diffusion, forcing),
+              then you fix it so it becomes divergence-free again.
+            </p>
+            <div class="math">
+              You can think about this in two steps:<br/>
+              1) Make a provisional velocity u* (usually not divergence-free)<br/>
+              2) Subtract a gradient:  u = u* − ∇p   so that  ∇·u ≈ 0
+            </div>
+            <p>
+              The “magic” is that choosing <span style="font-family:var(--mono)">p</span> so that <span style="font-family:var(--mono)">∇·(u* − ∇p)=0</span>
+              turns into a Poisson equation for pressure (an elliptic equation you solve iteratively on the grid).
+              That’s why pressure affects the whole domain.
+            </p>
+            <p class="muted">
+              Use the dropdown on the right to compare pressure, divergence before projection, and divergence after.
+              “After” should be close to zero. It's not perfect because grids are discrete and we do finite iterations.
+            </p>
+          </div>
+          <aside class="side">
+            <div class="canvas-wrap">
+              <canvas id="c3" width="840" height="520"></canvas>
+              <div class="badge" id="projBadge">mode: pressure</div>
+              <div class="badge right">projection</div>
+            </div>
+            <div class="controls">
+              <div class="row">
+                <div class="label">
+                  <b>View</b>
+                  <span>Pressure vs divergence.</span>
+                </div>
+                <select id="projSelect" class="val" style="text-align:left; min-width:240px">
+                  <option value="pressure">Pressure p</option>
+                  <option value="divBefore">Divergence before projection</option>
+                  <option value="divAfter">Divergence after projection</option>
+                </select>
+              </div>
+
+              <div class="tog">
+                <div class="label">
+                  <b>Obstacle</b>
+                  <span>Boundaries reshape p.</span>
+                </div>
+                <div class="switch on" id="obsSwitch2" role="switch" aria-checked="true"></div>
+              </div>
+
+              <div class="footnote">
+                Under the hood, pressure solves a Poisson equation (here via iterative relaxation).
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+      <section class="card" data-title="Projection step-through (u* → u)" data-key="projection" data-mode="velBefore">
+        <div class="cardgrid">
+          <div>
+            <h2>Projection Slowed Down</h2>
+            <p>
+              “Subtract ∇p” sounds small. On a grid, it pretty much turns pretty-looking swirls into actually incompressible flow.
+              This card lets you scrub through one projection pass.
+            </p>
+            <p>
+              The slider changes what you’re <em>looking at</em> in the same running simulation:
+              velocity before projection, divergence, pressure, velocity after projection.
+            </p>
+            <div class="math">
+              The constraint logic in one line is:<br/>
+              ∇·u = 0  and  u = u* − ∇p  ⇒  ∇²p = ∇·u*
+            </div>
+            <p class="muted">
+              If you’re wondering why pressure is global, Poisson equations propagate information across the domain.
+              That’s why a local stir can create a wide pressure pattern.
+            </p>
+          </div>
+          <aside class="side">
+            <div class="canvas-wrap">
+              <canvas id="cProj" width="840" height="520"></canvas>
+              <div class="badge" id="projStepBadge">view: velocity before</div>
+              <div class="badge right">u* → u</div>
+            </div>
+
+            <div class="controls">
+              <div class="row">
+                <div class="label">
+                  <b>Projection view</b>
+                  <span>Scrub through the components.</span>
+                </div>
+                <div class="val" id="projStepVal">0</div>
+              </div>
+              <input id="projStep" type="range" min="0" max="4" step="1" value="0" />
+
+              <div class="tog">
+                <div class="label">
+                  <b>Show arrows</b>
+                  <span>Overlay vectors (velocity views only).</span>
+                </div>
+                <div class="switch on" id="projArrowSwitch" role="switch" aria-checked="true"></div>
+              </div>
+
+              <div class="footnote">
+                The sim stores u* (before projection) and u (after) each frame, so this view updates live while you play.
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+      <section class="card" data-title="Viscosity: ν∇²u" data-key="viscosity" data-mode="dye">
+        <div class="cardgrid">
+          <div>
+            <h2>Viscosity: the “smoothing” term that hates sharp edges</h2>
+            <p>
+              Viscosity is the reason honey behaves differently than air. It’s also the reason tiny velocity wiggles don’t last forever.
+              The math form here is <span style="font-family:var(--mono)">ν∇²u</span>.
+            </p>
+            <p>
+              The Laplacian <span style="font-family:var(--mono)">∇²</span> is basically a curvature detector.
+              If a region is the same as its neighbors, the Laplacian is near zero. If it’s a spike compared to its neighbors,
+              the Laplacian is large and pulls it back toward the neighborhood average.
+            </p>
+            <div class="math">
+              In 1D, ∂²u/∂x² ≈ u(i−1) − 2u(i) + u(i+1)<br/>
+              This “penalizes spikes.” In 2D, you do it in x and y.
+            </div>
+            <p>
+              In the canvas, higher ν makes velocity gradients relax faster. That also affects the dye because dye is riding on the velocity.
+              Less sharp motion means less sharp dye filaments.
+            </p>
+            <p class="muted">
+              Real fluids can have more complicated viscosity behavior (we call this non-Newtonian). This page, a with mot physics simulations, sticks to the classic Newtonian case.
+            </p>
+          </div>
+          <aside class="side">
+            <div class="canvas-wrap">
+              <canvas id="c4" width="840" height="520"></canvas>
+              <div class="badge">mode: dye</div>
+              <div class="badge right" id="nuBadge">ν: 0.0008</div>
+            </div>
+
+            <div class="controls">
+              <div class="row">
+                <div class="label">
+                  <b>Kinematic viscosity ν</b>
+                  <span>How quickly momentum diffuses.</span>
+                </div>
+                <div class="val" id="viscVal4">0.0008</div>
+              </div>
+              <input id="visc4" type="range" min="0" max="1" step="0.001" value="0.34" />
+
+              <div class="footnote">
+                Lower ν tends to preserve sharper motion. Higher ν makes everything calm down quicker.
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+      <section class="card" data-title="Reynolds number (Re)" data-key="reynolds" data-mode="vel">
+        <div class="cardgrid">
+          <div>
+            <h2>Reynolds number</h2>
+            <p>
+              Reynolds number is a ratio that tells you which parts of the equation are likely to dominate
+              in a given situation.
+            </p>
+            <p>
+              If inertia wins (high Re), the flow has room to stretch and fold patterns before viscosity smooths them out.
+              If viscosity wins (low Re), motion gets ironed flat quickly.
+            </p>
+            <div class="math">
+              Re = (ρ U L) / μ  =  (U L) / ν<br/>
+              U: typical speed, L: typical length scale, ν: kinematic viscosity
+            </div>
+            <p>
+              The trick (and the annoyance) is choosing “typical.” In real problems, U and L come from context:
+              pipe diameter, aircraft wing chord, room size, flame plume width, etc.
+            </p>
+            <p class="muted">
+              This card gives you a reasonable toy: pick U and L, and use the ν slider from earlier.
+            </p>
+          </div>
+          <aside class="side">
+            <div class="canvas-wrap">
+              <canvas id="cRe" width="840" height="520"></canvas>
+              <div class="badge">mode: speed magnitude</div>
+              <div class="badge right" id="reBadge">Re: —</div>
+            </div>
+            <div class="controls">
+              <div class="row">
+                <div class="label">
+                  <b>Speed scale U</b>
+                  <span>“Typical” speed you care about.</span>
+                </div>
+                <div class="val" id="uScaleVal">0.60</div>
+              </div>
+              <input id="uScale" type="range" min="0.05" max="2.0" step="0.01" value="0.60" />
+              <div class="row">
+                <div class="label">
+                  <b>Length scale L</b>
+                  <span>Feature size / obstacle size.</span>
+                </div>
+                <div class="val" id="lScaleVal">0.50</div>
+              </div>
+              <input id="lScale" type="range" min="0.10" max="2.0" step="0.01" value="0.50" />
+              <div class="tog">
+                <div class="label">
+                  <b>Use current average speed</b>
+                  <span>Set U from the sim.</span>
+                </div>
+                <div class="switch" id="useAvgSwitch" role="switch" aria-checked="false"></div>
+              </div>
+              <div class="footnote">
+                Smaller ν correlates to a larger Re (same U and L). That’s why air flows “feel” high-Re compared to syrup.
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+      <section class="card" data-title="Forcing f and boundaries" data-key="forcing" data-mode="dye">
+        <div class="cardgrid">
+          <div>
+            <h2>Forcing and boundaries</h2>
+            <p>
+              The <span style="font-family:var(--mono)">f</span> term is anything that pushes on the fluid from outside.
+              Gravity is the classic example also from high school. Fans, pumps, and buoyancy (hot air rising) are others.
+              In this demo, your mouse drag is basically an applied force.
+            </p>
+            <p>
+              Boundaries are equally important. A wall blocks flow AND it forces the velocity field to meet a rule at the wall
+              (no-slip or free-slip approximations). That constraint couples into pressure, which means boundaries can influence the whole domain.
+            </p>
+            <p class="muted">
+              Boundary modeling is where real fluid modeling gets serious. Here it’s intentionally simplified.
+            </p>
+          </div>
+          <aside class="side">
+            <div class="canvas-wrap">
+              <canvas id="c5" width="840" height="520"></canvas>
+              <div class="badge">mode: dye</div>
+              <div class="badge right" id="bcBadge">BC: no-slip</div>
+            </div>
+
+            <div class="controls">
+              <div class="tog">
+                <div class="label">
+                  <b>Obstacle</b>
+                  <span>Toggle a circular boundary.</span>
+                </div>
+                <div class="switch on" id="obsSwitch3" role="switch" aria-checked="true"></div>
+              </div>
+
+              <div class="tog">
+                <div class="label">
+                  <b>Boundary model</b>
+                  <span>No-slip vs free-slip.</span>
+                </div>
+                <div class="switch" id="bcSwitch" role="switch" aria-checked="false"></div>
+              </div>
+
+              <div class="row">
+                <div class="label">
+                  <b>Force strength</b>
+                  <span>Stirring multiplier.</span>
+                </div>
+                <div class="val" id="injVal">1.00×</div>
+              </div>
+              <input id="inj" type="range" min="0.25" max="3.0" step="0.05" value="1.0" />
+
+              <div class="footnote">
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+      <section class="card" data-title="Time stepping Δt" data-key="timestep" data-mode="dye">
+        <div class="cardgrid">
+          <div>
+            <h2>Time stepping</h2>
+            <p>
+              The equation is written as if time is smooth. A computer can’t do “infinitely small.”
+              It advances in steps of size Δt: hop, hop, hop.
+            </p>
+            <p>
+              Smaller Δt is usually more faithful, but slower. Larger Δt is faster, but can introduce mistakes.
+              That’s why simulation code spends so much effort choosing stable update schemes.
+            </p>
+            <div class="math">
+              Discrete update sketch:<br/>
+              u^{n+1} ≈ u^n + Δt · RHS(u^n)
+            </div>
+            <p class="muted">
+            </p>
+          </div>
+          <aside class="side">
+            <div class="canvas-wrap">
+              <canvas id="c6" width="840" height="520"></canvas>
+              <div class="badge">mode: dye</div>
+              <div class="badge right" id="dtBadge">Δt: 0.12</div>
+            </div>
+
+            <div class="controls">
+              <div class="row">
+                <div class="label">
+                  <b>Time step Δt</b>
+                  <span>Faster vs more faithful.</span>
+                </div>
+                <div class="val" id="dtVal6">0.12</div>
+              </div>
+              <input id="dt6" type="range" min="0.02" max="1.1" step="0.01" value="0.12" />
+
+              <div class="tog">
+                <div class="label">
+                  <b>Slow motion</b>
+                  <span>Fewer solver steps per frame.</span>
+                </div>
+                <div class="switch on" id="slowSwitch" role="switch" aria-checked="true"></div>
+              </div>
+              <div class="footnote">
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+      <section class="card" data-title="Applications (and why this matters)" data-key="applications" data-mode="dye">
+        <div class="cardgrid">
+          <div>
+            <h2>Applications</h2>
+            <p>
+              Navier-Stokes is the engine behind a bunch of “wow” moments that are actually just air or water behavior.
+              If you care about how fluids move <em>and</em> how they push on things, you’re going to end up working with Navier-Stokes (or a close cousin).
+            </p>
+            <p>
+              Aerodynamics (lift/drag), weather and climate (huge flows), industrial mixing, airflow in buildings, smoke transport,
+              blood flow, and even movie-quality fluid effects all go to the same core idea: momentum conservation + constraints + material properties.
+            </p>
+            <p>
+              One application that’s close to my heart is <b>firefighting optimization</b>.
+              Fire suppression is a fluid problem too! You have to understand how water behavior works in order to predict how it will behave around terrains on fire.
+            </p>
+            <p>
+              If you are interested in how to teach an AI how Navier Stokes works, check out my paper on IEEE Xplore here: <a href="https://ieeexplore.ieee.org/document/10937583" target="_blank" rel="noopener">https://ieeexplore.ieee.org/document/10937583</a>
+            </p>
+
+            <div class="refs">
+              <h2 style="font-size:18px; margin:0 0 8px;">Works Cited</h2>
+              <p>
+                Constantin, Peter, and Ciprian Foiaş. Navier-stokes equations. University of Chicago press, 1988
+                <a href="https://books.google.com/books?hl=en&lr=&id=eI36TEsH4N8C&oi=fnd&pg=PR5&dq=navier+stokes+equations&ots=DpaN6J-dnZ&sig=6eaJbkea4frk0hWSw6cxRlXdXvM#v=onepage&q=navier%20stokes%20equations&f=false" target="_blank" rel="noopener">Link</a>
+              </p>
+              <p>
+                Łukaszewicz, Grzegorz, and Piotr Kalita. "Navier–stokes equations." Advances in Mechanics and Mathematics 34 (2016)
+                <a href="https://link.springer.com/book/10.1007/978-3-319-27760-8" target="_blank" rel="noopener">Link</a>
+              </p>
+              <p>
+                Bistafa, Sylvio R. "On the development of the Navier-Stokes equation by Navier." Revista Brasileira de Ensino de Física 40.2 (2018): e2603.
+                <a href="https://www.scielo.br/j/rbef/a/nNpqpRmKN8J3zPhV4WN4vFF/?lang=en" target="_blank" rel="noopener">Link</a>
+              </p>
+              <p>
+                Tsai, Tai-Peng. Lectures on Navier-Stokes equations. Vol. 192. American Mathematical Soc., 2018.
+                <a href="https://books.google.com/books?hl=en&lr=&id=W25oDwAAQBAJ&oi=fnd&pg=PP1&dq=navier+stokes+equations&ots=glgwxmwuxv&sig=Ng1h5d7HvP9VaSq2_xl368vcirc#v=onepage&q=navier%20stokes%20equations&f=false" target="_blank" rel="noopener">Link</a>
+              </p>
+            </div>
+          </div>
+          <aside class="side">
+            <div class="canvas-wrap">
+              <canvas id="cApp" width="840" height="520"></canvas>
+              <div class="badge">mode: dye</div>
+              <div class="badge right" id="appBadge">applications lens</div>
+            </div>
+
+            <div class="controls">
+              <div class="row">
+                <div class="label">
+                  <b>Lens</b>
+                  <span></span>
+                </div>
+                <select id="appSelect" class="val" style="text-align:left; min-width:260px">
+                  <option value="aero">Aerodynamics</option>
+                  <option value="weather">Weather</option>
+                  <option value="medical">Medical flow</option>
+                  <option value="fire">Firefighting + smoke</option>
+                </select>
+              </div>
+
+              <div class="footnote" id="appNote">
+                Aerodynamics: pressure + shear forces shape lift and drag, and tiny geometry changes can have huge effects.
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+<script>
+(() => {
+  const clamp = (x,a,b)=>Math.max(a,Math.min(b,x));
+  const lerp = (a,b,t)=>a+(b-a)*t;
+  const now = ()=>performance.now();
+
+  function hsvToRgb(h,s,v){
+    let r=0,g=0,b=0;
+    const i = Math.floor(h*6);
+    const f = h*6 - i;
+    const p = v*(1-s);
+    const q = v*(1-f*s);
+    const t = v*(1-(1-f)*s);
+    switch(i%6){
+      case 0: r=v,g=t,b=p; break;
+      case 1: r=q,g=v,b=p; break;
+      case 2: r=p,g=v,b=t; break;
+      case 3: r=p,g=q,b=v; break;
+      case 4: r=t,g=p,b=v; break;
+      case 5: r=v,g=p,b=q; break;
+    }
+    return [Math.floor(r*255),Math.floor(g*255),Math.floor(b*255)];
+  }
+
+  class FluidSim {
+    constructor(N){
+      this.N = N;
+      this.size = (N+2)*(N+2);
+      this.dt = 0.12;
+      this.diff = 0.00015;
+      this.visc = 0.0008;
+      this.iter = 14;
+
+      this.u = new Float32Array(this.size);
+      this.v = new Float32Array(this.size);
+      this.u0 = new Float32Array(this.size);
+      this.v0 = new Float32Array(this.size);
+
+      this.d = new Float32Array(this.size);
+      this.d0 = new Float32Array(this.size);
+
+      this.p = new Float32Array(this.size);
+      this.div = new Float32Array(this.size);
+      this.divBefore = new Float32Array(this.size);
+      this.divAfter = new Float32Array(this.size);
+      this.uBeforeProj = new Float32Array(this.size);
+      this.vBeforeProj = new Float32Array(this.size);
+      this.uAfterProj  = new Float32Array(this.size);
+      this.vAfterProj  = new Float32Array(this.size);
+
+      this.obstacle = new Uint8Array(this.size);
+      this.enableObstacle = false;
+      this.freeSlip = false;
+
+      this.energyHistory = [];
+      this.energyMax = 1e-6;
+      this.avgSpeed = 0;
+
+      this.reset();
+    }
+    IX(i,j){ return i + (this.N+2)*j; }
+
+    reset(){
+      this.u.fill(0); this.v.fill(0);
+      this.u0.fill(0); this.v0.fill(0);
+      this.d.fill(0); this.d0.fill(0);
+      this.p.fill(0); this.div.fill(0);
+      this.divBefore.fill(0); this.divAfter.fill(0);
+      this.uBeforeProj.fill(0); this.vBeforeProj.fill(0);
+      this.uAfterProj.fill(0);  this.vAfterProj.fill(0);
+      this.energyHistory.length = 0;
+      this.energyMax = 1e-6;
+      this.avgSpeed = 0;
+      this.setObstacle(this.enableObstacle);
+    }
+    clearDye(){ this.d.fill(0); }
+
+    setObstacle(on){
+      this.enableObstacle = !!on;
+      this.obstacle.fill(0);
+      if(!this.enableObstacle) return;
+      const N = this.N;
+      const cx = Math.floor(N*0.62), cy = Math.floor(N*0.52);
+      const r = Math.floor(N*0.12);
+      for(let j=1;j<=N;j++){
+        for(let i=1;i<=N;i++){
+          const dx = i-cx, dy = j-cy;
+          if(dx*dx+dy*dy <= r*r){
+            this.obstacle[this.IX(i,j)] = 1;
+          }
+        }
+      }
+    }
+
+    addDensity(i,j,amt){
+      const idx = this.IX(i,j);
+      if(this.obstacle[idx]) return;
+      this.d[idx] += amt;
+    }
+    addVelocity(i,j,amtU,amtV){
+      const idx = this.IX(i,j);
+      if(this.obstacle[idx]) return;
+      this.u[idx] += amtU;
+      this.v[idx] += amtV;
+    }
+
+    set_bnd(b, x){
+      const N=this.N;
+      for(let i=1;i<=N;i++){
+        x[this.IX(0,i)]   = this.freeSlip ? x[this.IX(1,i)] : (b===1 ? -x[this.IX(1,i)] : x[this.IX(1,i)]);
+        x[this.IX(N+1,i)] = this.freeSlip ? x[this.IX(N,i)] : (b===1 ? -x[this.IX(N,i)] : x[this.IX(N,i)]);
+        x[this.IX(i,0)]   = this.freeSlip ? x[this.IX(i,1)] : (b===2 ? -x[this.IX(i,1)] : x[this.IX(i,1)]);
+        x[this.IX(i,N+1)] = this.freeSlip ? x[this.IX(i,N)] : (b===2 ? -x[this.IX(i,N)] : x[this.IX(i,N)]);
+      }
+      x[this.IX(0,0)]       = 0.5*(x[this.IX(1,0)]     + x[this.IX(0,1)]);
+      x[this.IX(0,N+1)]     = 0.5*(x[this.IX(1,N+1)]   + x[this.IX(0,N)]);
+      x[this.IX(N+1,0)]     = 0.5*(x[this.IX(N,0)]     + x[this.IX(N+1,1)]);
+      x[this.IX(N+1,N+1)]   = 0.5*(x[this.IX(N,N+1)]   + x[this.IX(N+1,N)]);
+
+      if(this.enableObstacle){
+        for(let j=1;j<=N;j++){
+          for(let i=1;i<=N;i++){
+            const idx=this.IX(i,j);
+            if(this.obstacle[idx]) x[idx]=0;
+          }
+        }
+      }
+    }
+
+    lin_solve(b, x, x0, a, c){
+      const N=this.N;
+      for(let k=0;k<this.iter;k++){
+        for(let j=1;j<=N;j++){
+          for(let i=1;i<=N;i++){
+            const idx=this.IX(i,j);
+            if(this.obstacle[idx]) { x[idx]=0; continue; }
+            x[idx] = (x0[idx] + a*(x[this.IX(i-1,j)] + x[this.IX(i+1,j)] + x[this.IX(i,j-1)] + x[this.IX(i,j+1)])) / c;
+          }
+        }
+        this.set_bnd(b,x);
+      }
+    }
+
+    diffuse(b, x, x0, diff){
+      const N=this.N;
+      const a = this.dt * diff * N * N;
+      this.lin_solve(b, x, x0, a, 1 + 4*a);
+    }
+
+    advect(b, d, d0, u, v){
+      const N=this.N;
+      const dt0 = this.dt * N;
+      for(let j=1;j<=N;j++){
+        for(let i=1;i<=N;i++){
+          const idx=this.IX(i,j);
+          if(this.obstacle[idx]) { d[idx]=0; continue; }
+          let x = i - dt0 * u[idx];
+          let y = j - dt0 * v[idx];
+          x = clamp(x, 0.5, N + 0.5);
+          y = clamp(y, 0.5, N + 0.5);
+          const i0 = Math.floor(x), i1 = i0 + 1;
+          const j0 = Math.floor(y), j1 = j0 + 1;
+          const s1 = x - i0, s0 = 1 - s1;
+          const t1 = y - j0, t0 = 1 - t1;
+          d[idx] =
+            s0*(t0*d0[this.IX(i0,j0)] + t1*d0[this.IX(i0,j1)]) +
+            s1*(t0*d0[this.IX(i1,j0)] + t1*d0[this.IX(i1,j1)]);
+        }
+      }
+      this.set_bnd(b,d);
+    }
+
+    project(u, v, p, div){
+      const N=this.N;
+      for(let j=1;j<=N;j++){
+        for(let i=1;i<=N;i++){
+          const idx=this.IX(i,j);
+          if(this.obstacle[idx]) { div[idx]=0; p[idx]=0; continue; }
+          div[idx] = -0.5*(u[this.IX(i+1,j)] - u[this.IX(i-1,j)] + v[this.IX(i,j+1)] - v[this.IX(i,j-1)]) / N;
+          p[idx]=0;
+        }
+      }
+      this.set_bnd(0, div);
+      this.set_bnd(0, p);
+      this.divBefore.set(div);
+
+      this.lin_solve(0, p, div, 1, 4);
+
+      for(let j=1;j<=N;j++){
+        for(let i=1;i<=N;i++){
+          const idx=this.IX(i,j);
+          if(this.obstacle[idx]) { u[idx]=0; v[idx]=0; continue; }
+          u[idx] -= 0.5*N*(p[this.IX(i+1,j)] - p[this.IX(i-1,j)]);
+          v[idx] -= 0.5*N*(p[this.IX(i,j+1)] - p[this.IX(i,j-1)]);
+        }
+      }
+      this.set_bnd(1,u);
+      this.set_bnd(2,v);
+
+      for(let j=1;j<=N;j++){
+        for(let i=1;i<=N;i++){
+          const idx=this.IX(i,j);
+          if(this.obstacle[idx]) { div[idx]=0; continue; }
+          div[idx] = -0.5*(u[this.IX(i+1,j)] - u[this.IX(i-1,j)] + v[this.IX(i,j+1)] - v[this.IX(i,j-1)]) / N;
+        }
+      }
+      this.set_bnd(0, div);
+      this.divAfter.set(div);
+    }
+
+    step(){
+      this.u0.set(this.u);
+      this.v0.set(this.v);
+      this.diffuse(1, this.u, this.u0, this.visc);
+      this.diffuse(2, this.v, this.v0, this.visc);
+      this.project(this.u, this.v, this.p, this.div);
+      this.u0.set(this.u);
+      this.v0.set(this.v);
+      this.advect(1, this.u, this.u0, this.u0, this.v0);
+      this.advect(2, this.v, this.v0, this.u0, this.v0);
+      this.uBeforeProj.set(this.u);
+      this.vBeforeProj.set(this.v);
+      this.project(this.u, this.v, this.p, this.div);
+      this.uAfterProj.set(this.u);
+      this.vAfterProj.set(this.v);
+      this.d0.set(this.d);
+      this.diffuse(0, this.d, this.d0, this.diff);
+      this.d0.set(this.d);
+      this.advect(0, this.d, this.d0, this.u, this.v);
+      let e=0;
+      const N=this.N;
+      for(let j=1;j<=N;j++){
+        for(let i=1;i<=N;i++){
+          const idx=this.IX(i,j);
+          const uu=this.u[idx], vv=this.v[idx];
+          e += uu*uu + vv*vv;
+        }
+      }
+      e /= (N*N);
+      this.avgSpeed = Math.sqrt(Math.max(0, e));
+      this.energyMax = Math.max(this.energyMax, e);
+      this.energyHistory.push(e);
+      if(this.energyHistory.length>220) this.energyHistory.shift();
+    }
+  }
+
+  class Renderer {
+    constructor(sim, canvas){
+      this.sim = sim;
+      this.canvas = canvas;
+      this.ctx = canvas.getContext('2d', {alpha:false});
+      this.mode = 'dye';
+      this.showArrows = true;
+      this.arrowStep = 10;
+      this.showEnergy = false;
+      this.drawObstacleOutline = true;
+    }
+    setMode(m){ this.mode=m; }
+    setArrowStep(s){ this.arrowStep=s; }
+
+    render(){
+      const sim=this.sim;
+      const N=sim.N;
+      const W=this.canvas.width, H=this.canvas.height;
+      const ctx=this.ctx;
+
+      const img = ctx.createImageData(W,H);
+      const data = img.data;
+
+      let field = sim.d;
+      let min=1e9,max=-1e9;
+      if(this.mode==='pressure') field = sim.p;
+      if(this.mode==='divBefore') field = sim.divBefore;
+      if(this.mode==='divAfter') field = sim.divAfter;
+      if(this.mode==='velBefore' || this.mode==='velAfter') field = sim.d;
+
+      if(this.mode==='pressure' || this.mode.startsWith('div')){
+        for(let j=1;j<=N;j++){
+          for(let i=1;i<=N;i++){
+            const val = field[sim.IX(i,j)];
+            if(val<min) min=val;
+            if(val>max) max=val;
+          }
+        }
+        const span = Math.max(1e-8, max-min);
+        const center = (max+min)/2;
+        const targetSpan = Math.max(span, 1e-4);
+        min = center - targetSpan*0.5;
+        max = center + targetSpan*0.5;
+      }
+      const sampleVel = (idx00,idx10,idx01,idx11, ti, tj) => {
+        let U=sim.u, V=sim.v;
+        if(this.mode==='velBefore'){ U=sim.uBeforeProj; V=sim.vBeforeProj; }
+        if(this.mode==='velAfter'){  U=sim.uAfterProj;  V=sim.vAfterProj; }
+        const iu = (1-ti)*((1-tj)*U[idx00] + tj*U[idx01]) + ti*((1-tj)*U[idx10] + tj*U[idx11]);
+        const iv = (1-ti)*((1-tj)*V[idx00] + tj*V[idx01]) + ti*((1-tj)*V[idx10] + tj*V[idx11]);
+        return [iu,iv];
+      };
+
+      for(let y=0;y<H;y++){
+        const gy = 1 + (y/(H-1))*N;
+        const j0 = Math.floor(gy);
+        const tj = gy - j0;
+        const j1 = Math.min(N, j0+1);
+
+        for(let x=0;x<W;x++){
+          const gx = 1 + (x/(W-1))*N;
+          const i0 = Math.floor(gx);
+          const ti = gx - i0;
+          const i1 = Math.min(N, i0+1);
+
+          const idx00 = sim.IX(i0,j0);
+          const idx10 = sim.IX(i1,j0);
+          const idx01 = sim.IX(i0,j1);
+          const idx11 = sim.IX(i1,j1);
+
+          const obs =
+            (1-ti)*((1-tj)*sim.obstacle[idx00] + tj*sim.obstacle[idx01]) +
+             ti *((1-tj)*sim.obstacle[idx10] + tj*sim.obstacle[idx11]);
+
+          let r=246,g=248,b=255;
+
+          if(this.mode==='dye'){
+            const val =
+              (1-ti)*((1-tj)*sim.d[idx00] + tj*sim.d[idx01]) +
+               ti *((1-tj)*sim.d[idx10] + tj*sim.d[idx11]);
+            const d = clamp(val/120, 0, 1);
+            const [rr,gg,bb] = hsvToRgb(0.92 - 0.16*d, 0.50, 0.99);
+            r = lerp(248, rr, d*0.92);
+            g = lerp(250, gg, d*0.92);
+            b = lerp(255, bb, d*0.92);
+
+            const [iu,iv] = sampleVel(idx00,idx10,idx01,idx11, ti, tj);
+            const sp = Math.sqrt(iu*iu+iv*iv);
+            const shade = clamp(sp*0.9, 0, 1);
+            r = r - shade*10;
+            g = g - shade*8;
+            b = b - shade*5;
+          } else if(this.mode==='vel' || this.mode==='velBefore' || this.mode==='velAfter'){
+            const [iu,iv] = sampleVel(idx00,idx10,idx01,idx11, ti, tj);
+            const sp = Math.sqrt(iu*iu+iv*iv);
+            const m = clamp(sp*0.95, 0, 1);
+            const [rr,gg,bb] = hsvToRgb(0.62 - 0.22*m, 0.45, 0.99);
+            r = lerp(248, rr, m);
+            g = lerp(250, gg, m);
+            b = lerp(255, bb, m);
+          } else {
+            const val =
+              (1-ti)*((1-tj)*field[idx00] + tj*field[idx01]) +
+               ti *((1-tj)*field[idx10] + tj*field[idx11]);
+
+            const t = clamp((val - min) / Math.max(1e-8,(max-min)), 0, 1);
+            const mid = clamp((0 - min) / Math.max(1e-8,(max-min)), 0, 1);
+            let d = (t-mid);
+            d = clamp(d / Math.max(1e-6, Math.max(mid,1-mid)), -1, 1);
+
+            if(d<0){
+              const a = -d;
+              r = 248 - a*18;
+              g = 250 - a*22;
+              b = 255 - a*2;
+            } else {
+              const a = d;
+              r = 248 - a*2;
+              g = 250 - a*18;
+              b = 255 - a*22;
+            }
+          }
+
+          if(obs>0.05){
+            r = r*0.65;
+            g = g*0.65;
+            b = b*0.65;
+          }
+
+          const p = 4*(x + y*W);
+          data[p]   = clamp(r,0,255);
+          data[p+1] = clamp(g,0,255);
+          data[p+2] = clamp(b,0,255);
+          data[p+3] = 255;
+        }
+      }
+
+      ctx.putImageData(img,0,0);
+      if(this.drawObstacleOutline && sim.enableObstacle){
+        ctx.save();
+        ctx.strokeStyle = "rgba(11,18,32,0.28)";
+        ctx.lineWidth = 2;
+        const cx = (0.62)*W;
+        const cy = (0.52)*H;
+        const r = (0)*Math.min(W,H);
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI*2);
+        ctx.stroke();
+        ctx.restore();
+      }
+      if(this.showArrows && (this.mode==='dye' || this.mode==='vel' || this.mode==='velBefore' || this.mode==='velAfter')){
+        const step = this.arrowStep;
+        ctx.save();
+        ctx.globalAlpha = (this.mode==='vel' || this.mode==='velBefore' || this.mode==='velAfter') ? 0.78 : 0.55;
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "rgba(11,18,32,0.52)";
+        let U=sim.u, V=sim.v;
+        if(this.mode==='velBefore'){ U=sim.uBeforeProj; V=sim.vBeforeProj; }
+        if(this.mode==='velAfter'){  U=sim.uAfterProj;  V=sim.vAfterProj; }
+        for(let j=step; j<=N; j+=step){
+          for(let i=step; i<=N; i+=step){
+            const idx = sim.IX(i,j);
+            if(sim.obstacle[idx]) continue;
+            const u = U[idx], v = V[idx];
+            const x = (i-1)/(N-1) * W;
+            const y = (j-1)/(N-1) * H;
+            const scale = 14;
+            ctx.beginPath();
+            ctx.moveTo(x,y);
+            ctx.lineTo(x + u*scale, y + v*scale);
+            ctx.stroke();
+          }
+        }
+        ctx.restore();
+      }
+      if(this.showEnergy){
+        const hist = sim.energyHistory;
+        if(hist.length>2){
+          const pad=10;
+          const w=230, h=74;
+          const x0 = W - w - 12;
+          const y0 = 12;
+          ctx.save();
+          ctx.globalAlpha = 0.92;
+          ctx.fillStyle = "rgba(255,255,255,0.78)";
+          ctx.strokeStyle = "rgba(215,224,246,1)";
+          roundRect(ctx, x0, y0, w, h, 12);
+          ctx.fill(); ctx.stroke();
+          ctx.beginPath();
+          for(let k=0;k<hist.length;k++){
+            const tt = k/(hist.length-1);
+            const e = hist[k]/Math.max(1e-8, sim.energyMax);
+            const x = x0 + pad + tt*(w-2*pad);
+            const y = y0 + h - pad - e*(h-2*pad);
+            if(k===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+          }
+          ctx.strokeStyle="rgba(26,115,232,0.82)";
+          ctx.lineWidth=1.7;
+          ctx.stroke();
+          ctx.fillStyle="rgba(51,68,95,0.9)";
+          ctx.font="12px " + getComputedStyle(document.documentElement).getPropertyValue('--mono');
+          ctx.fillText("energy", x0+12, y0+20);
+          ctx.restore();
+        }
+      }
+    }
+  }
+
+  function roundRect(ctx,x,y,w,h,r){
+    const rr = Math.min(r, w/2, h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+rr,y);
+    ctx.arcTo(x+w,y,x+w,y+h,rr);
+    ctx.arcTo(x+w,y+h,x,y+h,rr);
+    ctx.arcTo(x,y+h,x,y,rr);
+    ctx.arcTo(x,y,x+w,y,rr);
+    ctx.closePath();
+  }
+
+  const sim = new FluidSim(76);
+
+  const renderers = {
+    cIntro: new Renderer(sim, document.getElementById('cIntro')),
+    cGloss: new Renderer(sim, document.getElementById('cGloss')),
+    c0: new Renderer(sim, document.getElementById('c0')),
+    c1: new Renderer(sim, document.getElementById('c1')),
+    c2: new Renderer(sim, document.getElementById('c2')),
+    c3: new Renderer(sim, document.getElementById('c3')),
+    cProj: new Renderer(sim, document.getElementById('cProj')),
+    c4: new Renderer(sim, document.getElementById('c4')),
+    cRe: new Renderer(sim, document.getElementById('cRe')),
+    c5: new Renderer(sim, document.getElementById('c5')),
+    c6: new Renderer(sim, document.getElementById('c6')),
+    cApp: new Renderer(sim, document.getElementById('cApp'))
+  };
+
+  renderers.cIntro.setMode('dye'); renderers.cIntro.showArrows=true; renderers.cIntro.setArrowStep(12);
+  renderers.cGloss.setMode('dye'); renderers.cGloss.showArrows=true; renderers.cGloss.setArrowStep(12);
+  renderers.c0.setMode('dye'); renderers.c0.showArrows=true; renderers.c0.setArrowStep(12);
+  renderers.c1.setMode('vel'); renderers.c1.showArrows=true; renderers.c1.setArrowStep(10);
+  renderers.c2.setMode('dye'); renderers.c2.showArrows=true; renderers.c2.setArrowStep(12);
+  renderers.c3.setMode('pressure'); renderers.c3.showArrows=false;
+  renderers.cProj.setMode('velBefore'); renderers.cProj.showArrows=true; renderers.cProj.setArrowStep(12);
+  renderers.c4.setMode('dye'); renderers.c4.showArrows=true; renderers.c4.setArrowStep(12);
+  renderers.cRe.setMode('vel'); renderers.cRe.showArrows=true; renderers.cRe.setArrowStep(12);
+  renderers.c5.setMode('dye'); renderers.c5.showArrows=true; renderers.c5.setArrowStep(12);
+  renderers.c6.setMode('dye'); renderers.c6.showArrows=true; renderers.c6.showEnergy=true; renderers.c6.setArrowStep(12);
+  renderers.cApp.setMode('dye'); renderers.cApp.showArrows=true; renderers.cApp.setArrowStep(12);
+  const cards = Array.from(document.querySelectorAll('.card'));
+  const dotsEl = document.getElementById('dots');
+  const cardTitleEl = document.getElementById('cardTitle');
+  const cardCountEl = document.getElementById('cardCount');
+  const jumpSelect = document.getElementById('jumpSelect');
+  let cardIndex = 0;
+  cards.forEach((_,i)=>{
+    const d=document.createElement('div');
+    d.className='stepdot' + (i===0?' active':'');
+    d.addEventListener('click', ()=>goTo(i));
+    dotsEl.appendChild(d);
+  });
+  cards.forEach((c, i)=>{
+    const opt = document.createElement('option');
+    opt.value = String(i);
+    opt.textContent = `${i+1}. ${c.dataset.title || ('Card ' + (i+1))}`;
+    jumpSelect.appendChild(opt);
+  });
+  jumpSelect.addEventListener('change', ()=>goTo(parseInt(jumpSelect.value,10)));
+
+  function goTo(i){
+    cardIndex = clamp(i,0,cards.length-1);
+    cards.forEach((c,idx)=>c.classList.toggle('active', idx===cardIndex));
+    Array.from(dotsEl.children).forEach((d,idx)=>d.classList.toggle('active', idx===cardIndex));
+    const title = cards[cardIndex].dataset.title || `Card ${cardIndex+1}`;
+    cardTitleEl.textContent = title;
+    cardCountEl.textContent = `${cardIndex+1} / ${cards.length}`;
+    jumpSelect.value = String(cardIndex);
+  }
+  function goToByKey(key){
+    const idx = cards.findIndex(c => (c.dataset.key || '') === key);
+    if(idx>=0) goTo(idx);
+  }
+  document.querySelectorAll('.eqline .sym').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const key = el.getAttribute('data-jump');
+      if(key) goToByKey(key);
+    });
+  });
+
+  document.getElementById('prevBtn').addEventListener('click', ()=>goTo(cardIndex-1));
+  document.getElementById('nextBtn').addEventListener('click', ()=>goTo(cardIndex+1));
+
+  let playing = false;
+  const playBtn = document.getElementById('playBtn');
+  const playLabel = document.getElementById('playLabel');
+  function setPlaying(p){
+    playing = p;
+    playLabel.textContent = playing ? 'Pause' : 'Play';
+    playBtn.firstChild.textContent = playing ? '⏸ ' : '⏵ ';
+  }
+  playBtn.addEventListener('click', ()=>setPlaying(!playing));
+  window.addEventListener('keydown', (e)=>{
+    if(e.code==='Space'){ e.preventDefault(); setPlaying(!playing); }
+    else if(e.code==='ArrowRight') goTo(cardIndex+1);
+    else if(e.code==='ArrowLeft') goTo(cardIndex-1);
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', ()=>{ sim.reset(); renderAll(); });
+  document.getElementById('clearBtn').addEventListener('click', ()=>{ sim.clearDye(); renderAll(); });
+
+  function mapNuSlider(x){
+    const t = x;
+    return 1e-6 * Math.pow(10, 4.0*t);
+  }
+
+  const visc = document.getElementById('visc');
+  const viscVal = document.getElementById('viscVal');
+  const visc4 = document.getElementById('visc4');
+  const viscVal4 = document.getElementById('viscVal4');
+  const nuBadge = document.getElementById('nuBadge');
+
+  function setNuFromSlider(val01){
+    const nu = mapNuSlider(parseFloat(val01));
+    sim.visc = nu;
+    const txt = nu.toExponential(2);
+    viscVal.textContent = txt;
+    viscVal4.textContent = txt;
+    nuBadge.textContent = 'ν: ' + txt;
+  }
+  visc.addEventListener('input', ()=>{ visc4.value = visc.value; setNuFromSlider(visc.value); });
+  visc4.addEventListener('input', ()=>{ visc.value = visc4.value; setNuFromSlider(visc4.value); });
+  setNuFromSlider(visc.value);
+
+  const dt = document.getElementById('dt');
+  const dtVal = document.getElementById('dtVal');
+  const dt6 = document.getElementById('dt6');
+  const dtVal6 = document.getElementById('dtVal6');
+  const dtBadge = document.getElementById('dtBadge');
+
+  function setDt(v){
+    const d = parseFloat(v);
+    sim.dt = d;
+    dtVal.textContent = d.toFixed(2);
+    dtVal6.textContent = d.toFixed(2);
+    dtBadge.textContent = 'Δt: ' + d.toFixed(2);
+  }
+  dt.addEventListener('input', ()=>{ dt6.value = dt.value; setDt(dt.value); });
+  dt6.addEventListener('input', ()=>{ dt.value = dt6.value; setDt(dt6.value); });
+  setDt(dt.value);
+
+  function setSwitch(el,on){
+    el.classList.toggle('on', !!on);
+    el.setAttribute('aria-checked', on ? 'true' : 'false');
+  }
+  function toggleSwitch(el, cb){
+    if(!el) return;
+    el.addEventListener('click', ()=>{
+      const on = !el.classList.contains('on');
+      setSwitch(el,on);
+      cb(on);
+    });
+  }
+  const obsSwitch = document.getElementById('obsSwitch');
+  const obsSwitch2 = document.getElementById('obsSwitch2');
+  const obsSwitch3 = document.getElementById('obsSwitch3');
+  function setObstacleAll(on){
+    sim.setObstacle(on);
+    setSwitch(obsSwitch, on);
+    setSwitch(obsSwitch2, on);
+    setSwitch(obsSwitch3, on);
+    renderAll();
+  }
+  toggleSwitch(obsSwitch, setObstacleAll);
+  toggleSwitch(obsSwitch2, setObstacleAll);
+  toggleSwitch(obsSwitch3, setObstacleAll);
+  const viewSelect = document.getElementById('viewSelect');
+  const modeBadge = document.getElementById('modeBadge');
+  viewSelect.addEventListener('change', ()=>{
+    const m = viewSelect.value;
+    renderers.cGloss.setMode(m==='vel' ? 'vel' : m);
+    renderers.c0.setMode(m==='vel' ? 'vel' : m);
+    modeBadge.textContent = 'mode: ' + (m==='dye' ? 'dye + speed shading' : m);
+  });
+  const projSelect = document.getElementById('projSelect');
+  const projBadge = document.getElementById('projBadge');
+  projSelect.addEventListener('change', ()=>{
+    const m = projSelect.value;
+    renderers.c3.setMode(m);
+    projBadge.textContent = 'mode: ' + (m==='pressure' ? 'pressure' : m==='divBefore' ? 'divergence (before)' : 'divergence (after)');
+  });
+  const arSwitch1 = document.getElementById('arSwitch1');
+  toggleSwitch(arSwitch1, (on)=>{ renderers.c1.showArrows = on; });
+
+  const arrowsOnDye = document.getElementById('arrowsOnDye');
+  toggleSwitch(arrowsOnDye, (on)=>{ renderers.c2.showArrows = on; });
+  const arrow = document.getElementById('arrow');
+  const arrowVal = document.getElementById('arrowVal');
+  arrow.addEventListener('input', ()=>{
+    const v = parseInt(arrow.value,10);
+    arrowVal.textContent = v;
+    renderers.c1.setArrowStep(v);
+  });
+  let injStrength = 4.0;
+  const inj = document.getElementById('inj');
+  const injVal = document.getElementById('injVal');
+  const inj2 = document.getElementById('inj2');
+  const injVal2 = document.getElementById('injVal2');
+  function setInj(v){
+    injStrength = parseFloat(v);
+    injVal.textContent = injStrength.toFixed(2) + '×';
+    injVal2.textContent = injStrength.toFixed(2) + '×';
+  }
+  inj.addEventListener('input', ()=>{ inj2.value = inj.value; setInj(inj.value); });
+  inj2.addEventListener('input', ()=>{ inj.value = inj2.value; setInj(inj2.value); });
+  setInj(inj.value);
+  const bcSwitch = document.getElementById('bcSwitch');
+  const bcBadge = document.getElementById('bcBadge');
+  toggleSwitch(bcSwitch, (on)=>{
+    sim.freeSlip = on;
+    bcBadge.textContent = 'BC: ' + (on ? 'free-slip' : 'no-slip');
+  });
+  const slowSwitch = document.getElementById('slowSwitch');
+  toggleSwitch(slowSwitch, ()=>{});
+  const projStep = document.getElementById('projStep');
+  const projStepVal = document.getElementById('projStepVal');
+  const projStepBadge = document.getElementById('projStepBadge');
+  const projArrowSwitch = document.getElementById('projArrowSwitch');
+  const projViews = [
+    {label:"velocity before", mode:"velBefore", arrows:true},
+    {label:"divergence before", mode:"divBefore", arrows:false},
+    {label:"pressure", mode:"pressure", arrows:false},
+    {label:"velocity after", mode:"velAfter", arrows:true},
+    {label:"divergence after", mode:"divAfter", arrows:false}
+  ];
+  function setProjView(k){
+    const v = projViews[k] || projViews[0];
+    renderers.cProj.setMode(v.mode);
+    renderers.cProj.showArrows = v.arrows && projArrowSwitch.classList.contains('on');
+    projStepVal.textContent = String(k);
+    projStepBadge.textContent = 'view: ' + v.label;
+  }
+  projStep.addEventListener('input', ()=>setProjView(parseInt(projStep.value,10)));
+  toggleSwitch(projArrowSwitch, ()=>{
+    const k = parseInt(projStep.value,10);
+    setProjView(k);
+  });
+  setProjView(0);
+  const uScale = document.getElementById('uScale');
+  const uScaleVal = document.getElementById('uScaleVal');
+  const lScale = document.getElementById('lScale');
+  const lScaleVal = document.getElementById('lScaleVal');
+  const reBadge = document.getElementById('reBadge');
+  const useAvgSwitch = document.getElementById('useAvgSwitch');
+  let useAvgU = false;
+  function updateReBadge(){
+    if(!uScale || !lScale || !reBadge) return;
+    const U = useAvgU ? (sim.avgSpeed || 0) : parseFloat(uScale.value);
+    const L = parseFloat(lScale.value);
+    const Re = (U * L) / Math.max(1e-12, sim.visc);
+    reBadge.textContent = 'Re: ' + (Re >= 1e4 ? Re.toExponential(2) : Re.toFixed(1));
+    if(uScaleVal) uScaleVal.textContent = (useAvgU ? (sim.avgSpeed || 0).toFixed(2) : parseFloat(uScale.value).toFixed(2));
+    if(lScaleVal) lScaleVal.textContent = parseFloat(lScale.value).toFixed(2);
+  }
+  uScale.addEventListener('input', ()=>{
+    useAvgU = false;
+    if(useAvgSwitch){ useAvgSwitch.classList.remove('on'); useAvgSwitch.setAttribute('aria-checked','false'); }
+    updateReBadge();
+  });
+  lScale.addEventListener('input', updateReBadge);
+  toggleSwitch(useAvgSwitch, (on)=>{ useAvgU = on; updateReBadge(); });
+  const appSelect = document.getElementById('appSelect');
+  const appNote = document.getElementById('appNote');
+  if(appSelect && appNote){
+    const notes = {
+      aero: "Aerodynamics: pressure + shear forces shape lift and drag, and tiny geometry changes can have huge effects.",
+      weather: "Weather: the same momentum bookkeeping, scaled up and tangled with temperature, moisture, and Earth’s rotation.",
+      medical: "Medical flow: small geometries, pulsing boundaries, and viscosity-heavy zones — still u, p, ν, and constraints.",
+      fire: "Firefighting: airflow + smoke transport + obstacles. Better models help plan ventilation, movement, and tactics under time pressure."
+    };
+    appSelect.addEventListener('change', ()=>{
+      const k = appSelect.value;
+      appNote.textContent = notes[k] || notes.aero;
+    });
+  }
+  const allCanvasEls = Object.values(renderers).map(r=>r.canvas);
+  const pointerState = new Map();
+  function canvasToGrid(canvas, clientX, clientY){
+    const rect = canvas.getBoundingClientRect();
+    const x = (clientX - rect.left) / rect.width;
+    const y = (clientY - rect.top) / rect.height;
+    const i = Math.floor(1 + x*sim.N);
+    const j = Math.floor(1 + y*sim.N);
+    return {x, y, i: clamp(i,1,sim.N), j: clamp(j,1,sim.N)};
+  }
+
+  function injectAt(i,j, dx, dy){
+    const amtD = 300*injStrength;
+    sim.addDensity(i,j, amtD);
+    sim.addVelocity(i,j, dx*0.25*injStrength, dy*0.25*injStrength);
+  }
+
+  allCanvasEls.forEach((c)=>{
+    c.addEventListener('pointerdown', (e)=>{
+      c.setPointerCapture(e.pointerId);
+      const g = canvasToGrid(c, e.clientX, e.clientY);
+      pointerState.set(e.pointerId, {canvas:c, lastX:g.x, lastY:g.y});
+      injectAt(g.i,g.j,0,0);
+    });
+    c.addEventListener('pointermove', (e)=>{
+      if(!pointerState.has(e.pointerId)) return;
+      const st = pointerState.get(e.pointerId);
+      const g = canvasToGrid(st.canvas, e.clientX, e.clientY);
+      const dx = (g.x - st.lastX) * sim.N;
+      const dy = (g.y - st.lastY) * sim.N;
+      injectAt(g.i,g.j, dx, dy);
+      st.lastX=g.x; st.lastY=g.y;
+    });
+    c.addEventListener('pointerup', (e)=>{ pointerState.delete(e.pointerId); });
+    c.addEventListener('pointercancel', (e)=>{ pointerState.delete(e.pointerId); });
+  });
+
+  function renderAll(){
+    for(const k in renderers) renderers[k].render();
+    updateReBadge();
+  }
+  setObstacleAll(true);
+  renderers.cGloss.setMode(viewSelect.value==='vel' ? 'vel' : viewSelect.value);
+  renderers.c0.setMode(viewSelect.value==='vel' ? 'vel' : viewSelect.value);
+  modeBadge.textContent = 'mode: ' + (viewSelect.value==='dye' ? 'dye + speed shading' : viewSelect.value);
+
+  let lastT = now();
+  function tick(){
+    const t = now();
+    lastT = t;
+
+    if(playing){
+      const slow = slowSwitch.classList.contains('on');
+      let steps = slow ? 1 : 2;
+      if(sim.dt > 0.45) steps = 1;
+      for(let s=0;s<steps;s++) sim.step();
+    }
+    renderAll();
+    requestAnimationFrame(tick);
+  }
+  setPlaying(false);
+  goTo(0);
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
+    
+  </body>
+  
+</html>
